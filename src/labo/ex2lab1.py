@@ -19,27 +19,27 @@ speed_controlled_robot  = manipulator.SpeedControlledManipulator.from_manipulato
 
 robot = speed_controlled_robot # For this exercise, we will only use the kinematic model
 
-# robot initial states [ joint 1 angle (rad),  joint 2 angle (rad), joint 1 velocity (rad/sec),  joint 1 velocity (rad/sec)]
-robot.x0 = np.array([ 0.1, 0.1])
+n = 100
+anglesMot1 = np.linspace(-np.pi, np.pi+0.1, n)
+anglesMot2 = np.linspace(-np.pi, np.pi+0.1, n)
+Q1, Q2 = np.meshgrid(anglesMot1, anglesMot2)
+Fext = np.array[[0.0], [-1.0]]
+mot1 = 0
+mot2 = 0
+tau1 = np.zeros_like(Q1)
+tau2 = np.zeros_like(Q2)
 
-# robot constant inputs
-robot.ubar = np.array([ 0.5, 1.0]) # Constant joint velocities
 
-# run the simulation
-robot.compute_trajectory( tf = 6 )
 
-# Animate and display the simulation
-robot.animate_simulation()
-#ani  = robot.generate_simulation_html_video()
-#html = display.HTML( ani )
-#display.display(html)
+for mot1 in range(n):
+    for mot2 in range(n):
+        q = np.array([Q1[mot1, mot2], Q2[mot1, mot2]])
+
+robot.J(angles)
 
 from pyro.control  import robotcontrollers
 
 class CustomKinematicController( robotcontrollers.EndEffectorKinematicController ) :
-    def __init__(self, robot, k=1):
-        super().__init__(robot, k)
-        self.kp = 2
 
     #############################
     def c( self , y , r , t ):
@@ -61,6 +61,7 @@ class CustomKinematicController( robotcontrollers.EndEffectorKinematicController
 
         # Pre-computed values based on the robot kinematic model
         J = self.J( q )        # Jacobian computation
+        JT = np.matrix_transpose(J)
         r = self.fwd_kin( q )  # End-effector postion
 
         ##############################
@@ -72,12 +73,8 @@ class CustomKinematicController( robotcontrollers.EndEffectorKinematicController
         #dr_d = np.zeros(2) # Place-holder
 
         # Compute the desired effector velocity
-        #dr_r = np.array([-0.1,0.1]) # Place holder
-        theta = t**2*0.5
-        r_d = np.array([1.5*np.cos(theta), 1.5*np.sin(theta)])
-        dr_d = np.array([-1.5*np.sin(theta)*t, 1.5*np.cos(theta)*t])
-        erreur = r_d - r
-        dr_r = self.kp * erreur + dr_d
+        dr_r = np.array([-0.1,0.1]) # Place holder
+
         # From effector speed to joint speed
         dq = np.linalg.inv( J ) @ dr_r
 

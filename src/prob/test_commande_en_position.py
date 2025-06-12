@@ -4,7 +4,7 @@
 import numpy as np
 
 from gro640_robots import LaserRobot
-from dosg0801_fecm0701 import CustomPositionController  # Empty template
+from LASJ1401_FALG1603 import CustomPositionController  # Empty template
 
 
 # Model cinématique du robot

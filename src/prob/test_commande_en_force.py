@@ -6,7 +6,7 @@ import matplotlib
 
 from gro640_robots import DrillingRobot
 from gro640_robots import DrillingRobotOnJig
-from dosg0801_fecm0701 import CustomDrillingController
+from LASJ1401_FALG1603 import CustomDrillingController
 
 
 # Model dynamique du robot
