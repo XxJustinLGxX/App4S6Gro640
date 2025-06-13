@@ -57,7 +57,7 @@ def dh2T(r, d, theta, alpha):
     T[3][1] = r*np.sin(theta)
     T[3][2] = d
     T[3][3] = 1
-    
+
     return T
 
 
@@ -79,13 +79,13 @@ def dhs2T(r, d, theta, alpha):
               Matrice de transformation totale de l'outil
 
     """
-
+    T = np.zeros((4, 4, X))
     WTT = np.zeros((4, 4))
 
     ###################
     # Votre code ici
     ###################
-
+    
     return WTT
 
 

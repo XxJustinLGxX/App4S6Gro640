@@ -33,7 +33,11 @@ robot.compute_trajectory( tf = 6 )
 from pyro.control  import robotcontrollers
 
 class CustomKinematicController( robotcontrollers.EndEffectorKinematicController ) :
-
+    def __init__(self, robot, k=1):
+        super().__init__(robot, k)
+        self.trajectoire = np.array([[5,0],[3,0],[0,3],[0,5]])
+        self.i = 0
+        self.kp = 2
     #############################
     def c( self , y , r , t ):
         """
