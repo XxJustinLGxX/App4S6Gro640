@@ -18,7 +18,7 @@ robot.x0 = np.array([ 0.1, 0.1, 0.0, 0.0])
 robot.compute_trajectory( tf = 6 )
 
 # Animate and display the simulation
-robot.animate_simulation()
+#robot.animate_simulation()
 
 from pyro.control  import robotcontrollers
 
@@ -81,77 +81,3 @@ robot_with_effector_pd.animate_simulation()
 robot_with_effector_pd.plot_trajectory('x')
 
 robot_with_effector_pd.plot_trajectory('u')
-
-class CustomController( robotcontrollers.RobotController ) :
-
-  ############################
-  def __init__( self, robot_model ):
-      """ """
-
-      super().__init__( 2 )
-
-      self.robot_model = robot_model
-
-  ############################
-  def c( self, y , r , t = 0):
-    """
-    y = [  q0,  q1, dq0 , dq1 ] : Feedback signal  y = Robot joint angles and joint velocities
-    r = [ qd0, qd1]             : Reference signal r = Robot desired joint angles
-    """
-    q   = y[0:2] # Joint position vector
-    dq  = y[2:4] # Join velocity vector
-    r_d = r      # Desired effector position vector
-
-    r = self.robot_model.forward_kinematic_effector( q ) # End-effector actual position
-    J = self.robot_model.J( q )      # Jacobian
-    g = self.robot_model.g( q )      # Gravity vector
-    H = self.robot_model.H( q )      # Inertia matrix
-    C = self.robot_model.C( q , dq ) # Coriolis matrix
-
-    u = np.array([ 0.0, 0.0])       # Place-holder to overwrite with your control law
-
-    ##############################
-    # YOUR CODE BELLOW !!
-    ##############################
-
-    Kp = np.diag([50,50])
-    Kd = np.diag([0,0])
-
-    #u = Kp @ ( q_d - q ) + Kd @ ( - dq )                 # Joint impedance law
-    u = J.T @ ( Kp @ ( r_d - r ) + Kd @ ( - J @ dq ) )    # End-effector impedance law
-
-    return u
-  
-custom_controller      = CustomController( robot )
-custom_controller.rbar = np.array([0.5,0.5])       # Desired robot position [ x , y ]
-
-# Create the closed-loop system
-robot_with_custom_controller = custom_controller + robot
-
-# Run the simulation
-traj = robot_with_custom_controller.compute_trajectory()
-
-# Animate the simulation
-robot_with_custom_controller.animate_simulation()
-
-robot_with_custom_controller.plot_trajectory('x')
-
-robot_with_custom_controller.plot_trajectory('u')
-
-q_f = traj.x[-1,0:2]
-r_f = robot.forward_kinematic_effector( q_f )
-
-ef = r_f - custom_controller.rbar
-print('Final error=',ef)
-
-if np.linalg.norm(ef) > 0.2 :
-  print('The final error is large, try an approach to reduce the steady state error.')
-
-max_torque_joint_1 = traj.u[:,0].max()
-max_torque_joint_2 = traj.u[:,1].max()
-
-print('Maximum torque of joint 1 = ', max_torque_joint_1 )
-print('Maximum torque of joint 2 = ', max_torque_joint_2 )
-
-if (max_torque_joint_1 > 9) or (max_torque_joint_2 > 9) :
-  print('The required torques are very large, try to reduce the feedback gains.')
