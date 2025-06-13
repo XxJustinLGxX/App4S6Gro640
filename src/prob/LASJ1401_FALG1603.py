@@ -79,7 +79,7 @@ def dhs2T(r, d, theta, alpha):
               Matrice de transformation totale de l'outil
 
     """
-    T = np.zeros((4, 4, X))
+    #T = np.zeros((4, 4))
     WTT = np.zeros((4, 4))
 
     ###################
@@ -220,9 +220,16 @@ class CustomDrillingController(robotcontrollers.RobotController):
 
         ##################################
         # Votre loi de commande ici !!!
-        ##################################
+        #################################
+        
+        Kx = 50 # constante de ressort
+        fe = np.zeros((2,1))
+        #fe = [Kx,0,0,0]*[dx, dy]-[0,-200]
+
 
         u = np.zeros(self.m)  # place-holder de bonne dimension
+
+        u = 
 
         return u
 
