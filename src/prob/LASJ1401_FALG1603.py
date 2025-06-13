@@ -163,6 +163,11 @@ class CustomPositionController(EndEffectorKinematicController):
         ##################################
         # Votre loi de commande ici !!!
         ##################################
+        lmd = 1
+    
+    
+
+        dq = np.invert(np.transpose(J)*J+lmd*np.identity(len(y)))*np.transpose(J)*e
 
         return dq
 
@@ -209,9 +214,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
         [q, dq] = self.x2q(x)
 
         # Robot model
-        r = self.robot_model.forward_kinematic_effector(
-            q
-        )  # End-effector actual position
+        r = self.robot_model.forward_kinematic_effector(q)  # End-effector actual position
         J = self.robot_model.J(q)  # Jacobian matrix
         g = self.robot_model.g(q)  # Gravity vector
         H = self.robot_model.H(q)  # Inertia matrix
