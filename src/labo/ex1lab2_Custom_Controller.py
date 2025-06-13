@@ -114,11 +114,11 @@ class CustomController( robotcontrollers.RobotController ) :
     # YOUR CODE BELLOW !!
     ##############################
 
-    Kp = np.diag([50,50])
-    Kd = np.diag([10,10])
+    Kp = np.diag([25,25])
+    Kd = np.diag([25,25])
 
     #u = Kp @ ( q_d - q ) + Kd @ ( - dq )                 # Joint impedance law
-    u = J.T @ ( Kp @ ( r_d - r ) + Kd @ ( - J @ dq ) )    # End-effector impedance law
+    u = J.T @ ( Kp @ ( r_d - r ) + Kd @ ( - J @ dq ) ) + g   # End-effector impedance law
 
     return u
   
