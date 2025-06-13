@@ -163,10 +163,8 @@ class CustomPositionController(EndEffectorKinematicController):
         ##################################
         # Votre loi de commande ici !!!
         ##################################
-        lmd = 1
+        lmd = 0.3
     
-    
-
         dq = np.invert(np.transpose(J)*J+lmd*np.identity(len(y)))*np.transpose(J)*e
 
         return dq
