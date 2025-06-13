@@ -7,11 +7,7 @@ from IPython import display
 from pyro.dynamic import manipulator
 
 # Dynamic model (inputs are motor torques)
-torque_controlled_robot    = manipulator.TwoLinkManipulator()
-
-torque_controlled_robot.l1 = 4.0 # length of first rigid link
-torque_controlled_robot.l2 = 3.0 # length of second rigid link
-torque_controlled_robot.l_domain = 10
+torque_controlled_robot    = manipulator.FiveLinkPlanarManipulator()
 
 # Kinematic only model (inputs are motor velocities)
 speed_controlled_robot  = manipulator.SpeedControlledManipulator.from_manipulator( torque_controlled_robot )
@@ -19,10 +15,10 @@ speed_controlled_robot  = manipulator.SpeedControlledManipulator.from_manipulato
 robot = speed_controlled_robot # For this exercise, we will only use the kinematic model
 
 # robot initial states [ joint 1 angle (rad),  joint 2 angle (rad), joint 1 velocity (rad/sec),  joint 1 velocity (rad/sec)]
-robot.x0 = np.array([ 0.1, 0.1])
+robot.x0 = np.zeros(5)
 
 # robot constant inputs
-robot.ubar = np.array([ 0.5, 1.0]) # Constant joint velocities
+robot.ubar = np.array([ 0.5, 0.5, 0.5, 0.5, 0.5]) # Constant joint velocities
 
 # run the simulation
 robot.compute_trajectory( tf = 6 )
@@ -53,22 +49,16 @@ class CustomKinematicController( robotcontrollers.EndEffectorKinematicController
         q = y                  # Joint angles
 
         # Pre-computed values based on the robot kinematic model
-        J = self.J( q )        # Jacobian computation
-        r = self.fwd_kin( q )  # End-effector postion
+        r      = self.fwd_kin( q )    # End-effector postion
+        J      = self.J( q )          # Jacobian computation
+        J_pinv = np.linalg.pinv( J )  # Pseudo Inverse
+        Null_p = np.identity( self.dof ) - np.dot(J_pinv,J) # Nullspace projection Matrix
 
         ##############################
         # YOUR CODE BELLOW !!
         ##############################
 
-        # Compute the reference
-        r_d  = np.zeros(2) # Place-holder
-        dr_d = np.zeros(2) # Place-holder
-
-        # Compute the desired effector velocity
-        dr_r = np.array([-0.1,0.1]) # Place holder
-
-        # From effector speed to joint speed
-        dq = np.linalg.inv( J ) @ dr_r
+        dq = Null_p @ np.array([1.0,0,0,0,0])
 
         return dq
     
@@ -78,14 +68,13 @@ ctl = CustomKinematicController( robot )
 robot_with_controller = ctl + robot
 
 # Run the simulation
-robot_with_controller.x0[0] = 5.0
-robot_with_controller.x0[1] = 0.0
-robot_with_controller.compute_trajectory( tf = 5 )
+robot_with_controller.x0 = np.array([0.1,0.2,0.2,0.2,0.2])
+robot_with_controller.compute_trajectory( tf = 3 )
+
+robot_with_controller.animate_simulation()
 
 # Plot systems states
 robot_with_controller.plot_trajectory('x')
 
 # Plot control inputs
 robot_with_controller.plot_trajectory('u')
-
-robot_with_controller.animate_simulation()
