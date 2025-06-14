@@ -32,32 +32,33 @@ def dh2T(r, d, theta, alpha):
 
     """
 
-    T = np.zeros((4, 4, X))
+    T = np.zeros((4, 4), dtype=np.float64)
     
     ###################
     # Votre code ici
     ###################
     #colonne 1
     T[0][0] = np.cos(theta)
-    T[0][1] = np.sin(theta)
-    T[0][2] = 0
-    T[0][3] = 0
+    T[1][0] = np.sin(theta)
+    T[2][0] = 0.0
+    T[3][0] = 0.0
     #colonne 2
-    T[1][0] = -np.sin(theta)*np.cos(alpha)
+    T[0][1] = -np.sin(theta)*np.cos(alpha)
     T[1][1] = np.cos(theta)*np.cos(alpha)
-    T[1][2] = np.sin(alpha)
-    T[1][3] = 0
+    T[2][1] = np.sin(alpha)
+    T[3][1] = 0.0
     #colonne 3
-    T[2][0] = np.sin(theta)*np.sin(alpha)
-    T[2][1] = -np.cos(theta)*np.sin(alpha)
+    T[0][2] = np.sin(theta)*np.sin(alpha)
+    T[1][2] = -np.cos(theta)*np.sin(alpha)
     T[2][2] = np.cos(alpha)
-    T[2][3] = 0
+    T[3][2] = 0.0
     #colonne 4
-    T[3][0] = r*np.cos(theta)
-    T[3][1] = r*np.sin(theta)
-    T[3][2] = d
-    T[3][3] = 1
-
+    T[0][3] = r*np.cos(theta)
+    T[1][3] = r*np.sin(theta)
+    T[2][3] = d
+    T[3][3] = 1.0
+    print(T)
+    print("1on1")
     return T
 
 
@@ -79,13 +80,22 @@ def dhs2T(r, d, theta, alpha):
               Matrice de transformation totale de l'outil
 
     """
-    #T = np.zeros((4, 4))
-    WTT = np.zeros((4, 4))
+    
+    
+    WTT = np.zeros((4, 4), dtype=np.float64)
+
 
     ###################
     # Votre code ici
     ###################
-    
+    for i in range(6):
+        if i == 0:
+            WTT = dh2T(r[i], d[i], theta[i], alpha[i])
+        else:
+            WTT = WTT @ dh2T(r[i], d[i], theta[i], alpha[i])
+        print(WTT)
+        print(i)
+
     return WTT
 
 
@@ -104,13 +114,23 @@ def f(q):
         Effector (x,y,z) position
 
     """
-    r = np.zeros((3, 1))
+    r_out = np.zeros((3, 1))
 
+    r = np.array([-0.033, 0.155, 0.118, 0.0, 0.0, 0.006], dtype=np.float64)
+    d = np.array([0.147, 0.0, 0.019, -0.009, 0.217, 0.009+q[5]], dtype=np.float64)
+    theta = np.array([q[0], q[1]+np.pi*0.5, q[2], q[3]+np.pi*0.5,  q[4]+np.pi, 0.0],dtype=np.float64)
+    alpha = np.array([np.pi*0.5, 0.0, 0.0, np.pi*0.5, np.pi*0.5, -np.pi*0.5],dtype=np.float64)
+    
     ###################
     # Votre code ici
     ###################
+    T = dhs2T(r, d, theta, alpha)
 
-    return r
+    r_out[0] = T[0][3]
+    r_out[1] = T[1][3]
+    r_out[2] = T[2][3]
+
+    return r_out
 
 
 ###################
@@ -165,7 +185,7 @@ class CustomPositionController(EndEffectorKinematicController):
         ##################################
         lmd = 0.3
     
-        dq = np.invert(np.transpose(J)*J+lmd*np.identity(len(y)))*np.transpose(J)*e
+        dq = np.linalg.pinv(np.transpose(J)@J+lmd**2*np.identity(len(y)))@np.transpose(J)@e
 
         return dq
 
@@ -229,7 +249,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
 
         u = np.zeros(self.m)  # place-holder de bonne dimension
 
-        u = 
+        #u = 
 
         return u
 
