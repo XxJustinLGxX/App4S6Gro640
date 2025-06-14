@@ -32,7 +32,7 @@ def dh2T(r, d, theta, alpha):
 
     """
 
-    T = np.zeros((4, 4))
+    T = np.zeros((4, 4, X))
     
     ###################
     # Votre code ici
