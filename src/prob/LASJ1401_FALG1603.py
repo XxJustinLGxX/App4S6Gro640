@@ -115,8 +115,8 @@ def f(q):
     """
     r_out = np.zeros((3, 1))
 
-    r = np.array([-0.033, 0.155, 0.118, 0.0, 0.0, 0.006], dtype=np.float64)
-    d = np.array([-0.147, 0.0, 0.019, -0.009, -0.217, 0.009+q[5]], dtype=np.float64)
+    r = np.array([-0.039, 0.155, 0.135, 0.0, 0.0, 0.006], dtype=np.float64)
+    d = np.array([-0.147, 0.0, 0.018, -0.009, -0.217, q[5]], dtype=np.float64)
     theta = np.array([q[0]+(np.pi*0.5), q[1]+(np.pi*0.5), q[2], q[3]-(np.pi*0.5),  q[4], 0.0],dtype=np.float64)
     alpha = np.array([-np.pi*0.5, 0.0, 0.0, np.pi*0.5, -np.pi*0.5, -np.pi*0.5],dtype=np.float64)
     
