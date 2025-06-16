@@ -299,8 +299,6 @@ class CustomDrillingController(robotcontrollers.RobotController):
 # Part 4
 ###################
 
-<<<<<<< HEAD
-=======
 def goal2r(r_0, r_f, t_f):
     """
     Parameters
@@ -445,4 +443,3 @@ def q2torque(q, dq, ddq, manipulator):
 
     return tau
 
->>>>>>> ff834778bcee580728c0b29b2063b19262c1059e
