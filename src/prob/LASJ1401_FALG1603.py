@@ -383,29 +383,30 @@ def r2q(r, dr, ddr, manipulator):
     l3 = manipulator.l3
 
     for i in range(l):
-        x, y, z = r[:, i]
 
-        q[l, 0] = np.arctan2(x, y)
-        rho = np.sqrt(x**2 + y**2)
+        q[0, i] = np.arctan(r[0]/ r[1])
+        rho = np.sqrt(r[0]**2 + r[1]**2)
 
-        q[l, 2] = ((rho**2 + r[2]**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
+        q[2, i] = ((rho**2 + r[2]**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
 
         alpha = np.arctan(r[2]-l1/rho)
-        beta = np.arctan((l2 * np.sin(q[l, 2]))/ (l1 + l2 * np.cos(q[l, 2])))
-        q[l, 1] = alpha + beta
+        beta = np.arctan((l2 * np.sin(q[2, i]))/ (l1 + l2 * np.cos(q[2, i])))
+        q[1, i] = alpha + beta
+
 
     for i in range(l):
-        # Position articulaire par cinématique inverse
-        q[:, i] = manipulator.inverse_kinematics(r[:, i])
+        J = manipulator.J(q[:, i])
+        J_inv = np.linalg.inv(J)
+        dq[:, i] =  J_inv @ dr[:, i]
 
-    for i in range(l):
-        # Jacobienne en configuration courante
-        J = manipulator.jacobian(q[:, i])
-        dq[:, i] = np.linalg.pinv(J) @ dr[:, i]
+        if i == 0 :
+            dJ =np.zeros_like(J)
+        else:
+            dJ = (J-J_anc)/ (3/1000)
+            ddq[:, i] = J_inv @ (ddr[:, i] - (dJ @ dq[:, i]))
 
-    for i in range(1, l - 1):
-        # Approximation de la dérivée par différence centrée
-        ddq[:, i] = (dq[:, i + 1] - dq[:, i - 1]) / ((r.shape[1] / 1000) * manipulator.tfinal)
+        J_anc = J
+
 
     return q, dq, ddq
 
