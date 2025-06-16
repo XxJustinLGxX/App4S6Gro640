@@ -325,36 +325,20 @@ def goal2r(r_0, r_f, t_f):
     # Votre code ici !!!
     ##################################
 
-    t = np.linspace(0, t_f, l)  # temps discret
-    delta = r_f - r_0           # déplacement total
-    ta = t_f * 0.25             # durée accélération
-    td = t_f * 0.25             # durée décélération
-    tc = t_f - ta - td          # durée vitesse constante
+    t = np.linspace(0, t_f, l)  # vecteur temps
+
+    # Chemin géométrique (ligne droite)
+    delta_r = r_f - r_0
+
+    # Profil temporel s(t), ds(t), dds(t) 
+    s = 3 * (t / t_f) ** 2 - 2 * (t / t_f) ** 3         
+    ds = 6* (t/ t_f**2) - 6* ( t**2 / t_f**3)         
+    dds = (6 / t_f**2) - (12*t / t_f**3)
 
     for i in range(l):
-        ti = t[i]
-
-        if ti < ta:
-            s = 0.5 * (ti / ta) ** 2
-            ds = ti / ta**2
-            dds = 1 / ta**2
-        elif ti < ta + tc:
-            s = (ti - ta / 2) / t_f
-            ds = 1 / t_f
-            dds = 0
-        elif ti <= t_f:
-            t_dec = ti - ta - tc
-            s = 1 - 0.5 * (1 - t_dec / td) ** 2
-            ds = (1 - t_dec / td) / td
-            dds = -1 / td ** 2
-        else:
-            s = 1
-            ds = 0
-            dds = 0
-
-        r[:, i] = r_0 + s * delta
-        dr[:, i] = ds * delta
-        ddr[:, i] = dds * delta
+        r[:, i]   = r_0 + s[i]   * delta_r            
+        dr[:, i]  = ds[i]  * delta_r                 
+        ddr[:, i] = dds[i] * delta_r                  
 
     return r, dr, ddr
 
@@ -389,22 +373,43 @@ def r2q(r, dr, ddr, manipulator):
     # Votre code ici !!!
     ##################################
 
+        # Constantes du robot (doivent correspondre à DrillingRobot)
+    l1 = manipulator.l1
+    l2 = manipulator.l2
+    l3 = manipulator.l3
+
+    for i in range(l):
+        x, y, z = r[:, i]
+
+        q1 = np.arctan2(x, y)
+
+        rho = np.sqrt(x**2 + y**2)
+        z_prime = z - l1
+
+        # q3 = angle du coude (arccos loi des cosinus)
+        D = ((rho**2 + z_prime**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
+        D = np.clip(D, -1.0, 1.0)  # sécurité numérique
+        q3 = np.arccos(D)
+
+        # q2 = angle de l'épaule (formule trigonométrique)
+        alpha = np.arctan2(z_prime, rho)
+        beta = np.arctan2(l3 * np.sin(q3), l2 + l3 * np.cos(q3))
+        q2 = alpha + beta
+
+        q[:, i] = np.array([q1, q2, q3])
+
     for i in range(l):
         # Position articulaire par cinématique inverse
-        q[:, i] = manipulator.kinematic.inverse_kinematics(r[:, i])
+        q[:, i] = manipulator.inverse_kinematics(r[:, i])
 
     for i in range(l):
-        # Jacobienne
-        J = manipulator.kinematic.jacobian(q[:, i])
+        # Jacobienne en configuration courante
+        J = manipulator.jacobian(q[:, i])
         dq[:, i] = np.linalg.pinv(J) @ dr[:, i]
 
-    for i in range(l):
-        # Approximation de ddq par dérivée numérique
-        if 1 <= i < l - 1:
-            dt = 1.0 / l * manipulator.tfinal  # si connu sinon fixe
-            ddq[:, i] = (dq[:, i + 1] - dq[:, i - 1]) / (2 * dt)
-        else:
-            ddq[:, i] = 0
+    for i in range(1, l - 1):
+        # Approximation de la dérivée par différence centrée
+        ddq[:, i] = (dq[:, i + 1] - dq[:, i - 1]) / ((r.shape[1] / 1000) * manipulator.tfinal)
 
     return q, dq, ddq
 
@@ -436,7 +441,7 @@ def q2torque(q, dq, ddq, manipulator):
     ##################################
 
     for i in range(l):
-        x = np.concatenate([q[:, i], dq[:, i]])  # état = position + vitesse
+        x = np.concatenate([q[:, i], dq[:, i]])  # état complet
         u = ddq[:, i]                            # accélération désirée
         tau[:, i] = manipulator.compute_control(x, u, t=0)
 
