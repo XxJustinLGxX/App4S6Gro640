@@ -384,12 +384,15 @@ def r2q(r, dr, ddr, manipulator):
 
     for i in range(l):
 
-        q[0, i] = np.arctan(r[0]/ r[1])
-        rho = np.sqrt(r[0]**2 + r[1]**2)
+        q[0, i] = np.arctan(r[1, i]/ r[0, i])
 
-        q[2, i] = ((rho**2 + r[2]**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
+        rho = np.sqrt(r[0, i]**2 + r[1, i]**2)
 
-        alpha = np.arctan(r[2]-l1/rho)
+        d_clip = ((rho**2 + (r[2, i] - l1)**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
+        d_clip = np.clip(d_clip, -1.0, 1.0)
+        q[2, i] = np.arccos(d_clip)
+
+        alpha = np.arctan((r[2, i]-l1)/rho)
         beta = np.arctan((l2 * np.sin(q[2, i]))/ (l1 + l2 * np.cos(q[2, i])))
         q[1, i] = alpha + beta
 
@@ -402,7 +405,7 @@ def r2q(r, dr, ddr, manipulator):
         if i == 0 :
             dJ =np.zeros_like(J)
         else:
-            dJ = (J-J_anc)/ (3/1000)
+            dJ = (J-J_anc)/ (6/1000)
             ddq[:, i] = J_inv @ (ddr[:, i] - (dJ @ dq[:, i]))
 
         J_anc = J
@@ -437,10 +440,10 @@ def q2torque(q, dq, ddq, manipulator):
     # Votre code ici !!!
     ##################################
 
-    for i in range(l):
-        x = np.concatenate([q[:, i], dq[:, i]])  # état complet
-        u = ddq[:, i]                            # accélération désirée
-        tau[:, i] = manipulator.compute_control(x, u, t=0)
-
+   # for i in range(l):
+   #     x = np.concatenate([q[:, i], dq[:, i]])  # état complet
+   #     u = ddq[:, i]                            # accélération désirée
+   #     tau[:, i] = manipulator.compute_control(x, u, t=0)
+#
     return tau
 
