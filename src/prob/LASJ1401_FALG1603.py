@@ -266,7 +266,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
             if(np.linalg.norm(e) < 0.001 ): #1mm d'erreur
                 self.case = 3
 
-        #if(self.case == 3) :
+        # if(self.case == 3) :
         #    r_g = np.array([0.25, 0.25, 0.2]) # perçage
         #    e = r_g - r
         #    u = Jtranp @ Fe + g
@@ -277,8 +277,8 @@ class CustomDrillingController(robotcontrollers.RobotController):
         if(self.case == 3) :
             r_g = np.array([0.25, 0.25, 0.2]) # perçage
             e = r_g - r
-            Kp = np.array([[80.0, 0.0, 0.0],[0.0, 80.0, 0.0],[0.0, 0.0, 1.0]])
-            Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 1.0]])
+            Kp = np.array([[80.0, 0.0, 0.0],[0.0, 80.0, 0.0],[0.0, 0.0, 0.0]])
+            Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 0.0]])
             u = Jtranp @Fe + g + Jtranp@(Kp@e + Kd@(-J@dq)) #
             # robot fini perçage
             if(r[2] < 0.2 ): #Fini de percer
@@ -299,6 +299,8 @@ class CustomDrillingController(robotcontrollers.RobotController):
 # Part 4
 ###################
 
+<<<<<<< HEAD
+=======
 def goal2r(r_0, r_f, t_f):
     """
     Parameters
@@ -444,3 +446,4 @@ def q2torque(q, dq, ddq, manipulator):
 
     return tau
 
+>>>>>>> ff834778bcee580728c0b29b2063b19262c1059e
