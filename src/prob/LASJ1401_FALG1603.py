@@ -223,7 +223,6 @@ class CustomDrillingController(robotcontrollers.RobotController):
         u  : control inputs vector    m x 1
 
         """
-
         # Ref
         f_e = r
 
@@ -244,12 +243,16 @@ class CustomDrillingController(robotcontrollers.RobotController):
         
         Kx = 50 # constante de ressort
         fe = np.zeros((2,1))
-        #fe = [Kx,0,0,0]*[dx, dy]-[0,-200]
-
-
+        fmax = np.zeros((2,1))
+        K = np.zeros((2,2))
+        K[0][0] = Kx
+        fmax[1] = -200
+        #e = 
+        #fe = K@
+        
         u = np.zeros(self.m)  # place-holder de bonne dimension
 
-        #u = 
+        #u = np.transpose(J)@fe + g
 
         return u
 
