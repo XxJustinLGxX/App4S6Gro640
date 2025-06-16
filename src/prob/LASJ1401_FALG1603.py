@@ -294,10 +294,8 @@ class CustomDrillingController(robotcontrollers.RobotController):
 # Part 4
 ###################
 
-
 def goal2r(r_0, r_f, t_f):
     """
-
     Parameters
     ----------
     r_0 : numpy array float 3 x 1
@@ -312,7 +310,6 @@ def goal2r(r_0, r_f, t_f):
     r   : numpy array float 3 x l
     dr  : numpy array float 3 x l
     ddr : numpy array float 3 x l
-
     """
     # Time discretization
     l = 1000  # nb of time steps
@@ -328,18 +325,47 @@ def goal2r(r_0, r_f, t_f):
     # Votre code ici !!!
     ##################################
 
+    t = np.linspace(0, t_f, l)  # temps discret
+    delta = r_f - r_0           # déplacement total
+    ta = t_f * 0.25             # durée accélération
+    td = t_f * 0.25             # durée décélération
+    tc = t_f - ta - td          # durée vitesse constante
+
+    for i in range(l):
+        ti = t[i]
+
+        if ti < ta:
+            s = 0.5 * (ti / ta) ** 2
+            ds = ti / ta**2
+            dds = 1 / ta**2
+        elif ti < ta + tc:
+            s = (ti - ta / 2) / t_f
+            ds = 1 / t_f
+            dds = 0
+        elif ti <= t_f:
+            t_dec = ti - ta - tc
+            s = 1 - 0.5 * (1 - t_dec / td) ** 2
+            ds = (1 - t_dec / td) / td
+            dds = -1 / td ** 2
+        else:
+            s = 1
+            ds = 0
+            dds = 0
+
+        r[:, i] = r_0 + s * delta
+        dr[:, i] = ds * delta
+        ddr[:, i] = dds * delta
+
     return r, dr, ddr
 
 
 def r2q(r, dr, ddr, manipulator):
     """
-
     Parameters
     ----------
     r   : numpy array float 3 x l
     dr  : numpy array float 3 x l
     ddr : numpy array float 3 x l
-
     manipulator : pyro object
 
     Returns
@@ -347,7 +373,6 @@ def r2q(r, dr, ddr, manipulator):
     q   : numpy array float 3 x l
     dq  : numpy array float 3 x l
     ddq : numpy array float 3 x l
-
     """
     # Time discretization
     l = r.shape[1]
@@ -364,24 +389,38 @@ def r2q(r, dr, ddr, manipulator):
     # Votre code ici !!!
     ##################################
 
+    for i in range(l):
+        # Position articulaire par cinématique inverse
+        q[:, i] = manipulator.kinematic.inverse_kinematics(r[:, i])
+
+    for i in range(l):
+        # Jacobienne
+        J = manipulator.kinematic.jacobian(q[:, i])
+        dq[:, i] = np.linalg.pinv(J) @ dr[:, i]
+
+    for i in range(l):
+        # Approximation de ddq par dérivée numérique
+        if 1 <= i < l - 1:
+            dt = 1.0 / l * manipulator.tfinal  # si connu sinon fixe
+            ddq[:, i] = (dq[:, i + 1] - dq[:, i - 1]) / (2 * dt)
+        else:
+            ddq[:, i] = 0
+
     return q, dq, ddq
 
 
 def q2torque(q, dq, ddq, manipulator):
     """
-
     Parameters
     ----------
     q   : numpy array float 3 x l
     dq  : numpy array float 3 x l
     ddq : numpy array float 3 x l
-
     manipulator : pyro object
 
     Returns
     -------
     tau   : numpy array float 3 x l
-
     """
     # Time discretization
     l = q.shape[1]
@@ -396,4 +435,10 @@ def q2torque(q, dq, ddq, manipulator):
     # Votre code ici !!!
     ##################################
 
+    for i in range(l):
+        x = np.concatenate([q[:, i], dq[:, i]])  # état = position + vitesse
+        u = ddq[:, i]                            # accélération désirée
+        tau[:, i] = manipulator.compute_control(x, u, t=0)
+
     return tau
+
