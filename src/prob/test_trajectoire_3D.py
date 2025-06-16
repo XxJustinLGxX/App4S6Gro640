@@ -13,7 +13,7 @@ from LASJ1401_FALG1603      import goal2r, r2q # Load your functions
 # Define end-effector motion
 r_0 = np.array([  0.5,   0.0,   1.0]) # start
 r_f = np.array([ -0.25, -0.4,   0.6]) # end-point
-t_f = 3.0                             # duration
+t_f = 6.0                             # duration
 
 # Compute the trajectory of the effector
 r, dr, ddr = goal2r( r_0 , r_f , t_f )
@@ -31,6 +31,7 @@ q3  = q[2,:]
 dq1 = dq[0,:]
 dq2 = dq[1,:]
 dq3 = dq[2,:]
+
 
 ###################################################
 # Direct joint trajectory test
