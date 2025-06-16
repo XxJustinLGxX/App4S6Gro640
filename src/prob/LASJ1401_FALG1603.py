@@ -373,7 +373,6 @@ def r2q(r, dr, ddr, manipulator):
     # Votre code ici !!!
     ##################################
 
-        # Constantes du robot (doivent correspondre à DrillingRobot)
     l1 = manipulator.l1
     l2 = manipulator.l2
     l3 = manipulator.l3
@@ -381,22 +380,14 @@ def r2q(r, dr, ddr, manipulator):
     for i in range(l):
         x, y, z = r[:, i]
 
-        q1 = np.arctan2(x, y)
-
+        q[l, 0] = np.arctan2(x, y)
         rho = np.sqrt(x**2 + y**2)
-        z_prime = z - l1
 
-        # q3 = angle du coude (arccos loi des cosinus)
-        D = ((rho**2 + z_prime**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
-        D = np.clip(D, -1.0, 1.0)  # sécurité numérique
-        q3 = np.arccos(D)
+        q[l, 2] = ((rho**2 + r[2]**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
 
-        # q2 = angle de l'épaule (formule trigonométrique)
-        alpha = np.arctan2(z_prime, rho)
-        beta = np.arctan2(l3 * np.sin(q3), l2 + l3 * np.cos(q3))
-        q2 = alpha + beta
-
-        q[:, i] = np.array([q1, q2, q3])
+        alpha = np.arctan(r[2]-l1/rho)
+        beta = np.arctan((l2 * np.sin(q[l, 2]))/ (l1 + l2 * np.cos(q[l, 2])))
+        q[l, 1] = alpha + beta
 
     for i in range(l):
         # Position articulaire par cinématique inverse
