@@ -49,7 +49,7 @@ def dh2T(r, d, theta, alpha):
     T[3][1] = 0.0
     #colonne 3
     T[0][2] = np.sin(theta)*np.sin(alpha)
-    T[1][2] = -np.cos(theta)*np.sin(alpha)
+    T[1][2] = -1*np.cos(theta)*np.sin(alpha)
     T[2][2] = np.cos(alpha)
     T[3][2] = 0.0
     #colonne 4
@@ -58,7 +58,6 @@ def dh2T(r, d, theta, alpha):
     T[2][3] = d
     T[3][3] = 1.0
     print(T)
-    print("1on1")
     return T
 
 
@@ -384,7 +383,7 @@ def r2q(r, dr, ddr, manipulator):
 
     for i in range(l):
 
-        q[0, i] = np.arctan(r[1, i]/ r[0, i])
+        q[0, i] = np.arctan(r[0, i]/ r[1, i])
 
         rho = np.sqrt(r[0, i]**2 + r[1, i]**2)
 
@@ -435,15 +434,18 @@ def q2torque(q, dq, ddq, manipulator):
 
     # Output dimensions
     tau = np.zeros((n, l))
-
+    
     #################################
     # Votre code ici !!!
     ##################################
 
-   # for i in range(l):
-   #     x = np.concatenate([q[:, i], dq[:, i]])  # état complet
-   #     u = ddq[:, i]                            # accélération désirée
-   #     tau[:, i] = manipulator.compute_control(x, u, t=0)
-#
+    for i in range(l):
+        g = manipulator.g(q[:,i]) # Gravity vector
+        H = manipulator.H(q[:,i])# Inertia matrix
+        C = manipulator.C(q[:,i], dq[:,i])  # Coriolis matrix
+        d = manipulator.d(q[:,i], dq[:,i])
+        tau[:, i] = H @ ddq[:,i] + C @ dq[:,i] + d + g
+
+    
     return tau
 

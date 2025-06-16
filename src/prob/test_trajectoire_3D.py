@@ -8,7 +8,7 @@ Created on Fri May  1 19:51:49 2020
 import numpy as np
 
 from gro640_robots import DrillingRobot
-from LASJ1401_FALG1603      import goal2r, r2q # Load your functions
+from LASJ1401_FALG1603      import goal2r, r2q, q2torque # Load your functions
 
 # Define end-effector motion
 r_0 = np.array([  0.5,   0.0,   1.0]) # start
@@ -63,3 +63,11 @@ sys.plot_trajectory('x')
 
 # Visualise x-y-z trajectory of the end-effector
 sys.plot_end_effector_trajectory()
+
+tau = q2torque( q, dq, ddq, model ) # Compute the joint torques
+
+sys.traj.u[:,0]  = tau[0,:]
+sys.traj.u[:,1]  = tau[1,:]
+sys.traj.u[:,2]  = tau[2,:]
+
+sys.plot_trajectory('u')
