@@ -205,6 +205,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
         super().__init__(dof=3)
 
         self.robot_model = robot_model
+        self.case = 1
 
         # Label
         self.name = "Custom Drilling Controller"
@@ -241,18 +242,50 @@ class CustomDrillingController(robotcontrollers.RobotController):
         # Votre loi de commande ici !!!
         #################################
         
-        Kx = 50 # constante de ressort
-        fe = np.zeros((2,1))
-        fmax = np.zeros((2,1))
-        K = np.zeros((2,2))
-        K[0][0] = Kx
-        fmax[1] = -200
+        Fe = np.zeros((3,1))
+        Fe[3] = -200
+        
+        Kp = np.array([[50.0, 0.0, 0.0],[0.0, 50.0, 0.0],[0.0, 0.0, 0.0]])
+        Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 0.0]])
         #e = 
         #fe = K@
+
         
         u = np.zeros(self.m)  # place-holder de bonne dimension
 
-        #u = np.transpose(J)@fe + g
+        if(self.case == 1) :
+            r_g = np.array([0.25, 0.25, 0.5]) # bouger robot au dessu du preperçage 
+            e = r_g - r
+            u = ... 
+            # robot pret pour descendre pour placer meche dans preperçage
+            if(np.linalg.norm(e) < 0.01 ): #10mm d'erreur
+                self.case = 2
+
+        if(self.case == 2) :
+            r_g = np.array([0.25, 0.25, 0.4]) # bouger robot au preperçage 
+            e = r_g - r
+            u = g + np.transpose(J)@(Kp@e + Kd@(-J@dq)) 
+            # robot pret a percer
+            if(np.linalg.norm(e) < 0.001 ): #1mm d'erreur
+                self.case = 3
+
+        #if(self.case == 3) :
+        #    r_g = np.array([0.25, 0.25, 0.2]) # perçage
+        #    e = r_g - r
+        #    u = np.transpose(J) @ Fe + g
+        #    # robot fini perçage
+        #    if(r[2] < 0.2 ): #Fini de percer
+        #        self.case = 4
+        
+        if(self.case == 3) :
+            r_g = np.array([0.25, 0.25, 0.2]) # perçage
+            e = r_g - r
+            Kp = np.array([[50.0, 0.0, 0.0],[0.0, 50.0, 0.0],[0.0, 0.0, 0.0]])
+            Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 0.0]])
+            u = np.transpose(J)@Fe + g + np.transpose(J)@(Kp@e + Kd@(-J@dq))
+            # robot fini perçage
+            if(r[2] < 0.2 ): #Fini de percer
+                self.case = 4
 
         return u
 
