@@ -244,7 +244,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
         Fe = np.array([0, 0, -200])
         
         Kp = np.array([[100.0, 0.0, 0.0],[0.0, 100.0, 0.0],[0.0, 0.0, 100.0]])
-        Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 25.0]])
+        Kd = np.array([[50.0, 0.0, 0.0],[0.0, 50.0, 0.0],[0.0, 0.0, 50.0]])
         
         u = np.zeros(self.m)  # place-holder de bonne dimension
         Jtranp = np.transpose(J)
@@ -278,7 +278,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
             e = r_g - r
             Kp = np.array([[80.0, 0.0, 0.0],[0.0, 80.0, 0.0],[0.0, 0.0, 0.0]])
             Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 0.0]])
-            u = Jtranp @Fe + g + Jtranp@(Kp@e + Kd@(-J@dq)) #
+            u = Jtranp @Fe + g + Jtranp@(Kp@e + Kd@(-J@dq)) 
             # robot fini perçage
             if(r[2] < 0.2 ): #Fini de percer
                 self.case = 4
