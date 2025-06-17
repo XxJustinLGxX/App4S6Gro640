@@ -84,7 +84,7 @@ def dhs2T(r, d, theta, alpha):
     ###################
     # Votre code ici
     ###################
-    # notre Z du world est vers le bas donc la sortie est négative en z 
+    # notre Z du world est vers le bas donc la sortie est négative en z et aussi au bas complètement de la base du robot
     # (les directions X, Y et Z sont les mêmes que l'axe de rotation à la base du robot dans onshape)
     for i in range(6):
         if i == 0:
@@ -179,7 +179,7 @@ class CustomPositionController(EndEffectorKinematicController):
         ##################################
         # Votre loi de commande ici !!!
         ##################################
-        lmd = 0.3
+        lmd = 0.3 #lambda pour limiter la vitesse et éviter les singulariter fonctionne entre 0.1 et 0.5, mais diminue la préscision 
     
         dq = np.linalg.pinv(np.transpose(J)@J+lmd**2*np.identity(len(y)))@np.transpose(J)@e
 
@@ -238,7 +238,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
         # Votre loi de commande ici !!!
         #################################
         
-        Fe = np.array([0, 0, -200])
+        Fe = np.array([0, 0, -200]) # force de 200N vers le bas Z-
         
         Kp = np.array([[100.0, 0.0, 0.0],[0.0, 100.0, 0.0],[0.0, 0.0, 100.0]])
         Kd = np.array([[50.0, 0.0, 0.0],[0.0, 50.0, 0.0],[0.0, 0.0, 50.0]])
@@ -336,6 +336,7 @@ def goal2r(r_0, r_f, t_f):
     ds = 6* (t/ t_f**2) - 6* ( t**2 / t_f**3)         
     dds = (6 / t_f**2) - (12*t / t_f**3)
 
+    # calcul de matrice des positions/vitesses/accélérations
     for i in range(l):
         r[:, i]   = r_0 + s[i]   * delta_r            
         dr[:, i]  = ds[i]  * delta_r                 
@@ -378,6 +379,7 @@ def r2q(r, dr, ddr, manipulator):
     l2 = manipulator.l2
     l3 = manipulator.l3
 
+    #cinématique inverse du robot, fomule trouver à la main
     for i in range(l):
 
         q[0, i] = np.arctan(r[0, i]/ r[1, i])
