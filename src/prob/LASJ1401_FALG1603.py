@@ -384,7 +384,7 @@ def r2q(r, dr, ddr, manipulator):
 
     for i in range(l):
 
-        q[0, i] = np.arctan(r[1, i]/ r[0, i])
+        q[0, i] = np.arctan(r[0, i]/ r[1, i])
 
         rho = np.sqrt(r[0, i]**2 + r[1, i]**2)
 
