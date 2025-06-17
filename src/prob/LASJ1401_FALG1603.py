@@ -57,7 +57,6 @@ def dh2T(r, d, theta, alpha):
     T[1][3] = r*np.sin(theta)
     T[2][3] = d
     T[3][3] = 1.0
-    print(T)
     return T
 
 
@@ -80,20 +79,18 @@ def dhs2T(r, d, theta, alpha):
 
     """
     
-    
     WTT = np.zeros((4, 4), dtype=np.float64)
-
 
     ###################
     # Votre code ici
     ###################
+    # notre Z du world est vers le bas donc la sortie est négative en z 
+    # (les directions X, Y et Z sont les mêmes que l'axe de rotation à la base du robot dans onshape)
     for i in range(6):
         if i == 0:
-            WTT = dh2T(r[i], d[i], theta[i], alpha[i])
+            WTT = dh2T(r[i], d[i], theta[i], alpha[i]) 
         else:
-            WTT = WTT @ dh2T(r[i], d[i], theta[i], alpha[i])
-        print(WTT)
-        print(i)
+            WTT = WTT @ dh2T(r[i], d[i], theta[i], alpha[i]) #multiplication des matrices pour avoir du tool au world
 
     return WTT
 
@@ -125,9 +122,9 @@ def f(q):
     ###################
     T = dhs2T(r, d, theta, alpha)
 
-    r_out[0] = T[0][3]
-    r_out[1] = T[1][3]
-    r_out[2] = T[2][3]
+    r_out[0] = T[0][3] #X
+    r_out[1] = T[1][3] #Y
+    r_out[2] = T[2][3] #Z
 
     return r_out
 
@@ -284,7 +281,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
                 self.case = 4
 
         if(self.case == 4) :
-            r_g = np.array([0.25, 0.25, 0.2]) # perçage
+            r_g = np.array([0.25, 0.25, 0.2])
             e = r_g - r
             Kp = np.array([[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]])
             Kd = np.array([[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]])
@@ -334,7 +331,7 @@ def goal2r(r_0, r_f, t_f):
     # Chemin géométrique (ligne droite)
     delta_r = r_f - r_0
 
-    # Profil temporel s(t), ds(t), dds(t) 
+    # Profil temporel s(t), ds(t), dds(t) avec polynomial d'ordre 3
     s = 3 * (t / t_f) ** 2 - 2 * (t / t_f) ** 3         
     ds = 6* (t/ t_f**2) - 6* ( t**2 / t_f**3)         
     dds = (6 / t_f**2) - (12*t / t_f**3)
@@ -388,14 +385,14 @@ def r2q(r, dr, ddr, manipulator):
         rho = np.sqrt(r[0, i]**2 + r[1, i]**2)
 
         d_clip = ((rho**2 + (r[2, i] - l1)**2) - (l2**2 + l3**2)) / (2 * l2 * l3)
-        d_clip = np.clip(d_clip, -1.0, 1.0)
+        d_clip = np.clip(d_clip, -1.0, 1.0) 
         q[2, i] = np.arccos(d_clip)
 
         alpha = np.arctan((r[2, i]-l1)/rho)
         beta = np.arctan((l2 * np.sin(q[2, i]))/ (l1 + l2 * np.cos(q[2, i])))
         q[1, i] = alpha + beta
 
-
+    #dérivé numérique de J
     for i in range(l):
         J = manipulator.J(q[:, i])
         J_inv = np.linalg.inv(J)
@@ -440,10 +437,10 @@ def q2torque(q, dq, ddq, manipulator):
     ##################################
 
     for i in range(l):
-        g = manipulator.g(q[:,i]) # Gravity vector
-        H = manipulator.H(q[:,i])# Inertia matrix
-        C = manipulator.C(q[:,i], dq[:,i])  # Coriolis matrix
-        d = manipulator.d(q[:,i], dq[:,i])
+        g = manipulator.g(q[:,i]) # Matrice Gravité
+        H = manipulator.H(q[:,i]) # matrice d'Inertie
+        C = manipulator.C(q[:,i], dq[:,i])  # Matrice Coriolis
+        d = manipulator.d(q[:,i], dq[:,i]) # Matrice Frottements(dissipation)
         tau[:, i] = H @ ddq[:,i] + C @ dq[:,i] + d + g
 
     
