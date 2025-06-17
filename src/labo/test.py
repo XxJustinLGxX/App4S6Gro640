@@ -1,77 +1,39 @@
 import numpy as np
 
-print(np.array([[100.0, 0.0, 0.0],[0.0, 100.0, 0.0],[0.0, 0.0, 100.0]]))
+#print(np.array([[100.0, 0.0, 0.0],[0.0, 100.0, 0.0],[0.0, 0.0, 100.0]]))
 
-Fe = np.zeros((3,1))
-Fe[2] = -200
-print(Fe)
+#Fe = np.zeros((3,1))
+#Fe[2] = -200
+#print(Fe)
 
-        # Ref
-        f_e = r
+r_0 = np.array([  0.5,   0.0,   1.0]) # start
+r_f = np.array([ -0.25, -0.4,   0.6]) # end-point
+t_f = 3.0                             # duration
 
-        # Feedback from sensors
-        x = y
-        [q, dq] = self.x2q(x)
+# Time discretization
+l = 1000  # nb of time steps
+    # Number of DoF for the effector only
+m = 3
 
-        # Robot model
-        r = self.robot_model.forward_kinematic_effector(q)  # End-effector actual position
-        J = self.robot_model.J(q)  # Jacobian matrix
-        g = self.robot_model.g(q)  # Gravity vector
-        H = self.robot_model.H(q)  # Inertia matrix
-        C = self.robot_model.C(q, dq)  # Coriolis matrix
+r = np.zeros((m, l))
+dr = np.zeros((m, l))
+ddr = np.zeros((m, l))
 
-        ##################################
-        # Votre loi de commande ici !!!
-        #################################
-        
-        Fe = np.array([0, 0, -200])
-        
-        Kp = np.array([[100.0, 0.0, 0.0],[0.0, 100.0, 0.0],[0.0, 0.0, 100.0]])
-        Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 25.0]])
-        
-        u = np.zeros(self.m)  # place-holder de bonne dimension
-        Jtranp = np.transpose(J)
+t = np.linspace(0, t_f, l)  # vecteur temps
 
-        if(self.case == 1) :
-            r_g = np.array([0.25, 0.25, 0.5]) # bouger robot au dessu du preperçage 
-            e = r_g - r
-            u = Jtranp@(Kp@e + Kd@(-J@dq)) + g
-            # robot pret pour descendre pour placer meche dans preperçage
-            if(np.linalg.norm(e) < 0.01 ): #10mm d'erreur
-                self.case = 2
+# Chemin géométrique (ligne droite)
+delta_r = r_f - r_0
 
-        if(self.case == 2) :
-            r_g = np.array([0.25, 0.25, 0.4]) # bouger robot au preperçage 
-            e = r_g - r
-            u = Jtranp@(Kp@e + Kd@(-J@dq)) + g
-            # robot pret a percer
-            if(np.linalg.norm(e) < 0.001 ): #1mm d'erreur
-                self.case = 3
+# Profil temporel s(t), ds(t), dds(t) 
+s = 3 * ( (t / t_f) ** 2 ) - 2 * ( (t / t_f) ** 3 )      
+ds = 6* (t/ (t_f**2)) - 6* ( (t**2) / (t_f**3) )         
+dds = ( 6 / (t_f**2) ) - ( (12*t) / (t_f**3) )
 
-        #if(self.case == 3) :
-        #    r_g = np.array([0.25, 0.25, 0.2]) # perçage
-        #    e = r_g - r
-        #    u = Jtranp @ Fe + g
-        #    # robot fini perçage
-        #    if(r[2] < 0.2 ): #Fini de percer
-        #        self.case = 4
-        
-        if(self.case == 3) :
-            r_g = np.array([0.25, 0.25, 0.2]) # perçage
-            e = r_g - r
-            Kp = np.array([[80.0, 0.0, 0.0],[0.0, 80.0, 0.0],[0.0, 0.0, 1.0]])
-            Kd = np.array([[25.0, 0.0, 0.0],[0.0, 25.0, 0.0],[0.0, 0.0, 1.0]])
-            u = Jtranp @Fe + g + Jtranp@(Kp@e + Kd@(-J@dq)) #
-            # robot fini perçage
-            if(r[2] < 0.2 ): #Fini de percer
-                self.case = 4
+for i in range(l):
+    r[:, i]   = r_0 + s[i] * delta_r            
+    dr[:, i]  = ds[i]  * delta_r                 
+    ddr[:, i] = dds[i] * delta_r 
 
-        if(self.case == 4) :
-            r_g = np.array([0.25, 0.25, 0.2]) # perçage
-            e = r_g - r
-            Kp = np.array([[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]])
-            Kd = np.array([[0.0, 0.0, 0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]])
-            u = np.transpose(J)@Fe + g + np.transpose(J)@(Kp@e + Kd@(-J@dq))
-            # robot fini perçage
-
-        return u
+print(r[:, l-1])
+#print(dr)
+#print(ddr)
