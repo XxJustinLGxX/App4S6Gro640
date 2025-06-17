@@ -262,7 +262,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
             if(np.linalg.norm(e) < 0.001 ): #1mm d'erreur
                 self.case = 3
 
-        # if(self.case == 3) :
+        # if(self.case == 3) : controle juste force sans impedance
         #    r_g = np.array([0.25, 0.25, 0.2]) # perçage
         #    e = r_g - r
         #    u = Jtranp @ Fe + g
@@ -270,7 +270,7 @@ class CustomDrillingController(robotcontrollers.RobotController):
         #    if(r[2] < 0.2 ): #Fini de percer
         #        self.case = 4
         
-        if(self.case == 3) :
+        if(self.case == 3) : # controle force + impedance
             r_g = np.array([0.25, 0.25, 0.2]) # perçage
             e = r_g - r
             Kp = np.array([[80.0, 0.0, 0.0],[0.0, 80.0, 0.0],[0.0, 0.0, 0.0]])
